@@ -1,0 +1,301 @@
+{
+  "source": "D:\\Dekstop\\deepseek harness\\signal_hw\\CEG.wav",
+  "fs": 44100,
+  "source_duration_s": 8.0,
+  "used_duration_s": 5.0,
+  "used_samples": 220500,
+  "df_hz": 0.2,
+  "gain_applied": 0.9551,
+  "notes": {
+    "C4": {
+      "f0_theory": 261.63,
+      "f0_measured": 261.22,
+      "cents": -2.7,
+      "harmonics_hz": [
+        261.22,
+        520.05,
+        790.69
+      ],
+      "level_db": 0.0
+    },
+    "E4": {
+      "f0_theory": 329.63,
+      "f0_measured": 329.73,
+      "cents": 0.6,
+      "harmonics_hz": [
+        329.73,
+        664.45,
+        987.12
+      ],
+      "level_db": -1.52
+    },
+    "G4": {
+      "f0_theory": 392.0,
+      "f0_measured": 392.72,
+      "cents": 3.2,
+      "harmonics_hz": [
+        392.72,
+        790.69,
+        1181.71
+      ],
+      "level_db": -1.96
+    }
+  },
+  "sampling_rate_experiments": [
+    {
+      "label": "44.1 kHz（原始）",
+      "fs": 44100,
+      "nyquist": 22050.0,
+      "samples": 220500,
+      "duration": 5.0,
+      "kind": "原始",
+      "status": "全带",
+      "rms": 0.23428,
+      "peak": 0.85,
+      "centroid_hz": 469.5,
+      "rolloff95_hz": 1168.2
+    },
+    {
+      "label": "22.05 kHz",
+      "fs": 22050,
+      "nyquist": 11025.0,
+      "samples": 110250,
+      "duration": 5.0,
+      "kind": "多相抗混叠",
+      "status": "合法",
+      "rms": 0.23436,
+      "peak": 0.84334,
+      "centroid_hz": 469.8,
+      "rolloff95_hz": 1165.5
+    },
+    {
+      "label": "8 kHz",
+      "fs": 8000,
+      "nyquist": 4000.0,
+      "samples": 40000,
+      "duration": 5.0,
+      "kind": "多相抗混叠",
+      "status": "合法",
+      "rms": 0.23433,
+      "peak": 0.84494,
+      "centroid_hz": 463.2,
+      "rolloff95_hz": 1143.6
+    },
+    {
+      "label": "1 kHz（直接抽取）",
+      "fs": 1000,
+      "nyquist": 500.0,
+      "samples": 5000,
+      "duration": 5.0,
+      "kind": "直接抽取",
+      "status": "基频保留/谐波混叠",
+      "rms": 0.23342,
+      "peak": 0.82257,
+      "centroid_hz": 319.8,
+      "rolloff95_hz": 444.4,
+      "alias_notes": {
+        "C4": 261.63,
+        "E4": 329.63,
+        "G4": 392.0
+      }
+    },
+    {
+      "label": "512 Hz（直接抽取）",
+      "fs": 512,
+      "nyquist": 256.0,
+      "samples": 2560,
+      "duration": 5.0,
+      "kind": "直接抽取",
+      "status": "基频混叠",
+      "rms": 0.23635,
+      "peak": 0.7973,
+      "centroid_hz": 167.3,
+      "rolloff95_hz": 249.2,
+      "alias_notes": {
+        "C4": 250.37,
+        "E4": 182.37,
+        "G4": 120.0
+      }
+    },
+    {
+      "label": "512 Hz（抗混叠重采样）",
+      "fs": 512,
+      "nyquist": 256.0,
+      "samples": 2560,
+      "duration": 5.0,
+      "kind": "多相抗混叠",
+      "status": "基频大部分被滤除",
+      "rms": 0.06303,
+      "peak": 0.15619,
+      "centroid_hz": 237.8,
+      "rolloff95_hz": 252.2
+    }
+  ],
+  "undersampled_notes": {
+    "1 kHz（直接抽取）": {
+      "C4": {
+        "f_theory": 261.63,
+        "f_measured": 261.98,
+        "cents": 2.3
+      },
+      "E4": {
+        "f_theory": 329.63,
+        "f_measured": 329.16,
+        "cents": -2.5
+      },
+      "G4": {
+        "f_theory": 392.0,
+        "f_measured": 392.23,
+        "cents": 1.0
+      }
+    },
+    "512 Hz（直接抽取）": {
+      "C4": {
+        "f_theory": 250.37,
+        "f_measured": 249.98,
+        "cents": -78.8
+      },
+      "E4": {
+        "f_theory": 182.37,
+        "f_measured": 182.81,
+        "cents": -1020.6
+      },
+      "G4": {
+        "f_theory": 120.0,
+        "f_measured": 120.42,
+        "cents": -2043.3
+      }
+    }
+  },
+  "upsample": {
+    "fs_in": 512,
+    "fs_out": 1024,
+    "L": 2,
+    "base_energy_512": 0.08102,
+    "base_energy_zero": 0.08102,
+    "image_energy_zero": 0.081021,
+    "image_to_base_zero_db": 0.0,
+    "image_energy_fir": 6.6e-05,
+    "image_to_base_fir_db": -30.84,
+    "image_suppression_fir_db": 30.88,
+    "image_energy_linear": 0.007358,
+    "image_to_base_linear_db": -7.95,
+    "image_suppression_linear_db": 10.42,
+    "base_change_fir_db": -0.035,
+    "base_change_linear_db": -2.47,
+    "centroid_512": 167.3,
+    "centroid_fir": 166.6,
+    "centroid_linear": 163.6
+  },
+  "figures": [
+    "fig01_time_original.png",
+    "fig02_spectrum_original.png",
+    "fig03_spectrogram_original.png",
+    "fig04_sampling_grid.png",
+    "fig05_spectra_full.png",
+    "fig06_spectra_zoom.png",
+    "fig07_alias_notes.png",
+    "fig08_upsample_time.png",
+    "fig09_upsample_spectrum.png"
+  ],
+  "audio": [
+    {
+      "file": "01_original_44100.wav",
+      "fs": 44100,
+      "duration": 5.0
+    },
+    {
+      "file": "02_22050_resampled.wav",
+      "fs": 22050,
+      "duration": 5.0
+    },
+    {
+      "file": "03_8000_resampled.wav",
+      "fs": 8000,
+      "duration": 5.0
+    },
+    {
+      "file": "04_1000_naive.wav",
+      "fs": 1000,
+      "duration": 5.0
+    },
+    {
+      "file": "05_512_naive.wav",
+      "fs": 512,
+      "duration": 5.0
+    },
+    {
+      "file": "06_512_antialias.wav",
+      "fs": 512,
+      "duration": 5.0
+    },
+    {
+      "file": "07_512_to_1024_fir.wav",
+      "fs": 1024,
+      "duration": 5.0
+    },
+    {
+      "file": "08_512_to_1024_linear.wav",
+      "fs": 1024,
+      "duration": 5.0
+    }
+  ],
+  "preview": [
+    {
+      "source": "01_original_44100.wav",
+      "preview": "01_original_44100_preview16k.wav",
+      "source_fs": 44100,
+      "preview_fs": 16000,
+      "duration": 5.0
+    },
+    {
+      "source": "02_22050_resampled.wav",
+      "preview": "02_22050_resampled_preview16k.wav",
+      "source_fs": 22050,
+      "preview_fs": 16000,
+      "duration": 5.0
+    },
+    {
+      "source": "03_8000_resampled.wav",
+      "preview": "03_8000_resampled_preview16k.wav",
+      "source_fs": 8000,
+      "preview_fs": 16000,
+      "duration": 5.0
+    },
+    {
+      "source": "04_1000_naive.wav",
+      "preview": "04_1000_naive_preview16k.wav",
+      "source_fs": 1000,
+      "preview_fs": 16000,
+      "duration": 5.0
+    },
+    {
+      "source": "05_512_naive.wav",
+      "preview": "05_512_naive_preview16k.wav",
+      "source_fs": 512,
+      "preview_fs": 16000,
+      "duration": 5.0
+    },
+    {
+      "source": "06_512_antialias.wav",
+      "preview": "06_512_antialias_preview16k.wav",
+      "source_fs": 512,
+      "preview_fs": 16000,
+      "duration": 5.0
+    },
+    {
+      "source": "07_512_to_1024_fir.wav",
+      "preview": "07_512_to_1024_fir_preview16k.wav",
+      "source_fs": 1024,
+      "preview_fs": 16000,
+      "duration": 5.0
+    },
+    {
+      "source": "08_512_to_1024_linear.wav",
+      "preview": "08_512_to_1024_linear_preview16k.wav",
+      "source_fs": 1024,
+      "preview_fs": 16000,
+      "duration": 5.0
+    }
+  ]
+}

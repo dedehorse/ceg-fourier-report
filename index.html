@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CEG 和弦的傅里叶变换与采样率分析</title>
+<meta name="description" content="CEG 和弦的 DFT 频谱分析、采样率与混叠实验、2 倍插值升采样。">
+<style>
+:root{
+  --navy:#1f3864; --navy2:#2b4c7e; --gold:#b08d57; --ink:#1f2937;
+  --muted:#5b6472; --line:#e3e7ee; --bg:#f5f6fa; --card:#ffffff;
+  --serif:"Noto Serif SC","Songti SC",SimSun,Georgia,serif;
+  --sans:"Noto Sans SC","Microsoft YaHei","PingFang SC",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);line-height:1.85;font-size:16px}
+a{color:var(--navy);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+.hero{background:
+  radial-gradient(1200px 500px at 85% -10%,rgba(176,141,87,.35),transparent 60%),
+  linear-gradient(135deg,#16233d 0%,#1f3864 55%,#2b4c7e 100%);
+  color:#fff;padding:72px 0 46px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:42px 42px;pointer-events:none}
+.hero .wrap{position:relative;z-index:1}
+.kicker{font-family:var(--sans);font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:#d9c3a3;margin-bottom:16px}
+h1{font-size:clamp(30px,5vw,52px);line-height:1.25;margin:0 0 16px;font-weight:800;letter-spacing:.02em}
+.sub{font-size:clamp(15px,2vw,19px);color:#dbe3f1;max-width:760px;margin:0 0 26px}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:30px}
+.chip{font-family:var(--sans);font-size:13px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.09);padding:7px 13px;border-radius:999px;color:#f2f5fb}
+.actions{display:flex;flex-wrap:wrap;gap:12px}
+.btn{font-family:var(--sans);display:inline-block;padding:11px 18px;border-radius:10px;font-size:14px;font-weight:600;transition:.2s}
+.btn.primary{background:#fff;color:var(--navy)}
+.btn.ghost{border:1px solid rgba(255,255,255,.45);color:#fff}
+.btn:hover{transform:translateY(-1px);text-decoration:none;opacity:.95}
+nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;gap:6px;overflow-x:auto;padding-top:10px;padding-bottom:10px}
+nav a{font-family:var(--sans);font-size:13.5px;color:var(--muted);padding:6px 10px;border-radius:8px;white-space:nowrap}
+nav a:hover{background:#eef2f9;color:var(--navy);text-decoration:none}
+main{padding:42px 0 30px}
+section{margin:0 0 46px;scroll-margin-top:76px}
+h2{font-family:var(--sans);font-size:clamp(22px,3vw,30px);line-height:1.3;margin:0 0 8px;color:var(--navy);letter-spacing:.01em}
+h2 .num{color:var(--gold);font-size:.72em;margin-right:10px;letter-spacing:.08em}
+.lead{color:var(--muted);font-size:16px;margin:0 0 22px;max-width:880px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px 28px;box-shadow:0 12px 30px rgba(31,56,100,.055)}
+.card + .card{margin-top:18px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:0 0 18px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px;box-shadow:0 8px 22px rgba(31,56,100,.05)}
+.stat b{display:block;font-family:var(--sans);font-size:26px;color:var(--navy);line-height:1.2;margin-bottom:4px}
+.stat span{font-size:13px;color:var(--muted);line-height:1.5;display:block}
+figure{margin:20px 0 8px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 8px 22px rgba(31,56,100,.04)}
+figure img{width:100%;height:auto;display:block;border-radius:8px}
+figcaption{font-family:var(--sans);font-size:13px;color:var(--muted);padding:10px 6px 2px;text-align:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.note{background:#fbf7ef;border-left:4px solid var(--gold);padding:14px 18px;border-radius:0 10px 10px 0;color:#5b4a34;font-size:14.5px;margin:18px 0}
+.note b{color:#7a5c2e}
+table{width:100%;border-collapse:collapse;font-family:var(--sans);font-size:13.5px;margin:14px 0 8px;background:#fff}
+th,td{border:1px solid var(--line);padding:9px 10px;text-align:center;vertical-align:middle}
+th{background:var(--navy);color:#fff;font-weight:600}
+tbody tr:nth-child(even){background:#f8f9fc}
+.tbl-wrap{overflow-x:auto;border-radius:10px}
+.tbl-cap{font-family:var(--sans);font-size:13px;color:var(--muted);text-align:center;margin:16px 0 2px}
+.audio-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
+.audio-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 18px 14px;box-shadow:0 8px 22px rgba(31,56,100,.04)}
+.audio-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:6px}
+.track{font-family:var(--sans);font-size:12px;font-weight:700;color:#fff;background:var(--gold);border-radius:7px;padding:3px 8px;letter-spacing:.06em;margin-top:3px}
+.audio-card h3{font-family:var(--sans);font-size:15.5px;margin:0;line-height:1.4}
+.fs{font-family:var(--sans);font-size:12px;color:var(--muted);margin:2px 0 0}
+.audio-note{font-size:13.5px;color:var(--muted);margin:6px 0 10px;line-height:1.6}
+audio{width:100%;height:38px;margin:2px 0 8px}
+.audio-dl{font-family:var(--sans);font-size:12px;color:var(--muted)}
+.dl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+.dl{display:block;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-family:var(--sans);font-size:14px}
+.dl b{display:block;color:var(--navy);margin-bottom:2px}
+.dl span{font-size:12px;color:var(--muted)}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:8px 14px;font-size:14.5px;margin:8px 0}
+.kv dt{color:var(--muted);font-family:var(--sans);font-size:13px}
+.kv dd{margin:0}
+footer{border-top:1px solid var(--line);background:#fff;padding:26px 0 36px;color:var(--muted);font-size:13px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.top{position:fixed;right:18px;bottom:18px;background:var(--navy);color:#fff;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-family:var(--sans);font-size:18px;box-shadow:0 8px 20px rgba(31,56,100,.25)}
+@media(max-width:860px){
+  .stats{grid-template-columns:1fr 1fr} .grid2,.audio-grid{grid-template-columns:1fr}
+  .dl-grid{grid-template-columns:1fr 1fr} .card{padding:20px}
+}
+@media(max-width:520px){
+  .stats,.dl-grid{grid-template-columns:1fr} .hero{padding:52px 0 36px} .wrap{padding:0 16px}
+}
+@media print{
+  nav,.top,.actions,audio{display:none!important} body{background:#fff}
+  .hero{background:#fff;color:#000;padding:0} .hero:after{display:none} .chip{border-color:#999;color:#333}
+  .card,figure,.audio-card{box-shadow:none;break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Signals &amp; Systems · Course Report</div>
+    <h1>CEG 和弦的傅里叶变换<br>与采样率分析</h1>
+    <p class="sub">从 DFT 频谱到 512 Hz 欠采样，再到 2 倍插值升采样：用一段 5 秒和弦，把采样定理、频谱混叠和镜像抑制连成一条完整的实验链。</p>
+    <div class="chips">
+      <span class="chip">44 100 Hz · 16 bit · 5.000 s</span>
+      <span class="chip">C4 / E4 / G4</span>
+      <span class="chip">DFT · STFT · FIR</span>
+      <span class="chip">8 段可播放音频</span>
+    </div>
+    <div class="actions">
+      <a class="btn primary" href="信号处理与系统分析实验报告_徐宏基.docx" download>下载实验报告 DOCX</a>
+      <a class="btn ghost" href="#audio">直接试听</a>
+    </div>
+  </div>
+</header>
+
+<nav><div class="wrap">
+  <a href="#overview">概览</a><a href="#time">时域</a><a href="#spectrum">频谱</a><a href="#spectrogram">时频</a>
+  <a href="#sampling">采样率</a><a href="#alias">混叠</a><a href="#upsample">升采样</a><a href="#audio">音频</a><a href="#conclusion">结论</a>
+</div></nav>
+
+<main class="wrap">
+
+<section id="overview">
+  <h2><span class="num">00</span>结论先行</h2>
+  <p class="lead">三个音的音高偏差都在 3.2 音分以内；采样率降到 8 kHz 仍然“像”原来的和弦；降到 512 Hz 时，三个基频全部翻折，和弦被彻底破坏。升采样能让波形变连续、镜像被压制 30.9 dB，但无法把已经混叠掉的高频“变回来”。</p>
+  <div class="stats">
+    <div class="stat"><b>3.2<span style="font-size:15px"> cent</span></b><span>三个基频与十二平均律的最大偏差</span></div>
+    <div class="stat"><b>−2043<span style="font-size:15px"> cent</span></b><span>512 Hz 采样时 G4 的音高偏移</span></div>
+    <div class="stat"><b>30.9<span style="font-size:15px"> dB</span></b><span>FIR 升采样的镜像抑制</span></div>
+    <div class="stat"><b>8 × 5.000<span style="font-size:15px"> s</span></b><span>每段实验音频都满足时长要求</span></div>
+  </div>
+  <div class="card">
+    <dl class="kv">
+      <dt>信号</dt><dd>CEG.wav，单声道，44 100 Hz，原始 8.000 s；实验统一截取 0–5.000 s。</dd>
+      <dt>基频</dt><dd>C4 = 261.22 Hz（−2.7 cent），E4 = 329.73 Hz（+0.6 cent），G4 = 392.72 Hz（+3.2 cent）。</dd>
+      <dt>能量</dt><dd>集中在 1.2 kHz 以下；频谱质心 469.5 Hz，95% 滚降点 1168.2 Hz；5 kHz 以上为宽带噪声/混响底。</dd>
+      <dt>方法</dt><dd>5 s 单帧 DFT（Δf = 0.2 Hz）看谱线；4096 点 Welch 看谱包络；4096 点 STFT 看时频变化；多相 FIR / 直接抽取 / 零插值 + FIR 做采样率实验。</dd>
+    </dl>
+  </div>
+</section>
+
+<section id="time">
+  <h2><span class="num">01</span>时域：先看清这段和弦</h2>
+  <p class="lead">全波形包络起伏明显，说明存在拍频或颤音；局部波形不是单一正弦，而是三个音高叠加后的复杂周期波形。44.1 kHz 下相邻样本间隔 22.68 μs，20 ms 内有 882 个样本，足以刻画 5 kHz 以下的细节。</p>
+  <figure><a href="figures/fig01_time_original.png" target="_blank"><img loading="lazy" src="figures/fig01_time_original.png" alt="原始信号时域波形"></a>
+  <figcaption>图 1　原始 CEG 和弦的时域波形（上：5 s 全波形；下：1.000–1.020 s 局部放大）</figcaption></figure>
+  <div class="note"><b>读图提示：</b>上图纵轴峰值 0.850、RMS 0.234，波峰因数约 3.6——这不是单频信号，而是多个频率成分叠加。下图红圈每 4 个样本标 1 个，仍能看出波形的“细节纹理”。</div>
+</section>
+
+<section id="spectrum">
+  <h2><span class="num">02</span>频谱：三根基频与它们的谐波</h2>
+  <p class="lead">5 s 单帧 DFT 的频率间隔为 0.2 Hz；但 5 Hz 颤音会在每根谱线两侧产生间隔 5 Hz 的边带，使高分辨率谱非常密集。为了看清“有哪些音、能量多大”，这里用 4096 点 Welch 平均谱展示包络，峰位则用 16384 点高分辨率谱读取。</p>
+  <figure><a href="figures/fig02_spectrum_original.png" target="_blank"><img loading="lazy" src="figures/fig02_spectrum_original.png" alt="原始信号频谱"></a>
+  <figcaption>图 2　原始信号频谱（上：0–1.2 kHz 功率谱；下：0–5 kHz 对数功率谱）</figcaption></figure>
+  <div class="card">
+    <p style="margin-top:0">三个最高的低频峰分别位于 <b>261.2、329.7、392.7 Hz</b>，与十二平均律 C4（261.63 Hz）、E4（329.63 Hz）、G4（392.00 Hz）分别相差 −2.7、+0.6、+3.2 音分，均远小于人耳约 5–10 音分的分辨阈，因此可以确定是 <b>C 大三和弦</b>。三个基频的幅度相差不到 2 dB，说明三个音大致平衡。</p>
+    <p>谐波方面，C4 的 2、3 次谐波约为 520.1、790.7 Hz；E4 的 2、3 次约为 664.5、987.1 Hz；G4 的 2、3 次约为 790.7、1181.7 Hz。C4 的 3 次谐波与 G4 的 2 次谐波在 790 Hz 附近重合，这正是和弦音色融合、听感丰满的原因之一。</p>
+    <p style="margin-bottom:0">谱包络从约 −23 dB 逐步下降到 5 kHz 的 −65 dB 左右；5 kHz 以上主要是宽带噪声和混响底，幅度约 −60 ~ −80 dB。</p>
+  </div>
+</section>
+
+<section id="spectrogram">
+  <h2><span class="num">03</span>时频图：谱线在“呼吸”</h2>
+  <p class="lead">STFT 把“频域有哪几根谱线”和“这些谱线随时间怎样变化”同时表示出来。图中谐波是一系列近似平行的水平亮线，每条亮线都随时间做周期约 0.2 s（约 5 Hz）的上下摆动，并伴随幅度起伏，对应颤音/抖动的频率调制与幅度调制。</p>
+  <figure><a href="figures/fig03_spectrogram_original.png" target="_blank"><img loading="lazy" src="figures/fig03_spectrogram_original.png" alt="原始信号时频图"></a>
+  <figcaption>图 3　原始信号的 STFT 时频图（0–5 kHz，Hann 窗 4096 点，重叠 87.5%）</figcaption></figure>
+</section>
+
+<section id="sampling">
+  <h2><span class="num">04</span>改变采样率：同一段波形的“粗化”</h2>
+  <p class="lead">保持 5.000 s 时长不变，分别得到 44.1、22.05、8、1、0.512 kHz 五种采样率。22.05 kHz 和 8 kHz 用多相 FIR 抗混叠重采样，属于“合法降采样”；1 kHz 和 512 Hz 用直接抽取，属于“故意欠采样”，用来暴露混叠。</p>
+  <figure><a href="figures/fig04_sampling_grid.png" target="_blank"><img loading="lazy" src="figures/fig04_sampling_grid.png" alt="不同采样率的离散化"></a>
+  <figcaption>图 4　同一段和弦在不同采样率下的离散化（灰线：44.1 kHz 连续波形；红圈：当前采样点）</figcaption></figure>
+  <p>采样率降低首先表现为时域“连线”变粗、细节丢失；频域的混叠正是这种时域欠采样的另一面。512 Hz 时相邻点间隔 1.953 ms，样本点已经无法跟上原始波形的快速变化。</p>
+
+  <p class="tbl-cap">表 1　不同采样率下的时域与频域统计量</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>采样率 f_s</th><th>f_s / Hz</th><th>f_N / Hz</th><th>5 s 样本数</th><th>RMS</th><th>峰值</th><th>质心 / Hz</th><th>滚降95 / Hz</th></tr></thead>
+    <tbody>
+      <tr><td>44.1 kHz</td><td>44 100</td><td>22 050</td><td>220 500</td><td>0.234</td><td>0.850</td><td>469.5</td><td>1168.2</td></tr>
+      <tr><td>22.05 kHz</td><td>22 050</td><td>11 025</td><td>110 250</td><td>0.234</td><td>0.843</td><td>469.8</td><td>1165.5</td></tr>
+      <tr><td>8 kHz</td><td>8 000</td><td>4 000</td><td>40 000</td><td>0.234</td><td>0.845</td><td>463.2</td><td>1143.6</td></tr>
+      <tr><td>1 kHz（抽取）</td><td>1 000</td><td>500</td><td>5 000</td><td>0.233</td><td>0.823</td><td>319.8</td><td>444.4</td></tr>
+      <tr><td>512 Hz（抽取）</td><td>512</td><td>256</td><td>2 560</td><td>0.236</td><td>0.797</td><td>167.3</td><td>249.2</td></tr>
+      <tr><td>512 Hz（抗混叠）</td><td>512</td><td>256</td><td>2 560</td><td>0.063</td><td>0.156</td><td>237.8</td><td>252.2</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note"><b>一个容易误解的点：</b>直接抽取到 1 kHz 或 512 Hz 时，RMS 仍约 0.233–0.236，与原始 0.234 几乎相同。这是因为抽取只是把原有频率成分搬到别处，并没有删掉能量（Parseval 定理）。但质心从 469.5 Hz 降到 319.8 / 167.3 Hz，能量分布已经被严重改变。相反，512 Hz 抗混叠重采样的 RMS 只有 0.063，因为低通把大部分能量真正滤掉了。</div>
+
+  <figure><a href="figures/fig05_spectra_full.png" target="_blank"><img loading="lazy" src="figures/fig05_spectra_full.png" alt="不同采样率的功率谱"></a>
+  <figcaption>图 5　不同采样率下的功率谱（Welch，Hann，5 s；虚线为各面板的 Nyquist 频率）</figcaption></figure>
+  <p>22.05 kHz 与原始几乎重合；8 kHz 的频谱在 4 kHz 处被抗混叠滤波器截断，4 kHz 以上没有内容，但 0–4 kHz 的谐波结构完整，因此听感只是略微变暗。1 kHz 和 512 Hz 的直接抽取则完全不同：频谱不再有清晰的谐波线，而是被大量折叠谱线填满，能量向低频集中。</p>
+
+  <figure><a href="figures/fig06_spectra_zoom.png" target="_blank"><img loading="lazy" src="figures/fig06_spectra_zoom.png" alt="0-560Hz 低频段对比"></a>
+  <figcaption>图 6　0–560 Hz 低频段对比（统一 0.5 s 窗，Δf≈2 Hz）</figcaption></figure>
+  <p>左图中 44.1、22.05、8 kHz 三条曲线几乎完全重合，说明在满足采样定理时，降低采样率并不会改变 0–560 Hz 的基频与低次谐波。中图 1 kHz 时 C4、E4、G4 三根基频线仍在 262、330、392 Hz 附近，但 500 Hz 以上的谐波折回，使谱线变得密集；右图 512 Hz 时，原本的 262、330、392 Hz 位置已经没有基频，能量出现在 120、182、250 Hz 附近——基频本身被折叠了。</p>
+</section>
+
+<section id="alias">
+  <h2><span class="num">05</span>混叠：从 CEG 到 120–250 Hz</h2>
+  <p class="lead">三个基频都在 256–512 Hz 之间，因此 512 Hz 采样时只需减一次 f_s：C4 261.6 → 250.4 Hz，E4 329.6 → 182.4 Hz，G4 392.0 → 120.0 Hz。实测值 250.0、182.8、120.4 Hz 与理论值吻合，误差来自 5 Hz 颤音边带和谱线泄漏。</p>
+  <p class="tbl-cap">表 2　512 Hz 直接抽取时三个基频的折叠位置与音高误差</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>音符</th><th>原始 f0 / Hz</th><th>理论折叠 / Hz</th><th>实测峰位 / Hz</th><th>音分误差 / cent</th></tr></thead>
+    <tbody>
+      <tr><td>C4</td><td>261.63</td><td>250.37</td><td>249.98</td><td>−78.8</td></tr>
+      <tr><td>E4</td><td>329.63</td><td>182.37</td><td>182.81</td><td>−1020.6</td></tr>
+      <tr><td>G4</td><td>392.00</td><td>120.00</td><td>120.42</td><td>−2043.3</td></tr>
+    </tbody>
+  </table></div>
+  <figure><a href="figures/fig07_alias_notes.png" target="_blank"><img loading="lazy" src="figures/fig07_alias_notes.png" alt="基频位置与音分误差"></a>
+  <figcaption>图 7　基频在采样后的位置与音分误差（左：位置迁移；右：误差柱状图）</figcaption></figure>
+  <p>1 kHz 时三个基频几乎不动（误差在 ±2.5 音分内），但高次谐波已经折叠；512 Hz 时三个基频全部离开原位，折叠后的三个频率（120、182、250 Hz）彼此只差约 60–70 Hz，听感上不再是 CEG 和弦，而更像低频的嗡鸣或失真。G4 已经低了约 17 个半音，完全不是原来的音高。</p>
+  <div class="note"><b>试听对比：</b>先听 01（原始）、04（1 kHz）、05（512 Hz），再听 06（512 Hz 抗混叠）。04 的“音高骨架”还在，但音色金属化；05 已经变成低频嗡鸣；06 干净却很弱、很闷——这就是“抗混叠”与“保留音高”的矛盾。</div>
+</section>
+
+<section id="upsample">
+  <h2><span class="num">06</span>2 倍插值：把 512 Hz 变成 1024 Hz</h2>
+  <p class="lead">零插值在原样本之间插入一个零，采样率变为 1024 Hz；再用 1025 阶 Kaiser 窗（β = 8）线性相位 FIR 低通滤除镜像，截止频率 255.8 Hz。作为对照，同时做线性内插。</p>
+  <figure><a href="figures/fig08_upsample_time.png" target="_blank"><img loading="lazy" src="figures/fig08_upsample_time.png" alt="升采样时域波形"></a>
+  <figcaption>图 8　512 Hz → 1024 Hz 的时域内插（上：FIR 与线性内插；下：零插值序列与 FIR 输出）</figcaption></figure>
+  <p>零插值序列在 1024 Hz 网格上每隔一个点就是零，FIR 低通把这些冲激“铺开”成连续波形，且在原始 512 Hz 样本处基本回到原值；线性内插则是把相邻样本直接连成折线，转折明显、高频细节更生硬。</p>
+
+  <p class="tbl-cap">表 3　512 Hz → 1024 Hz 三种升采样结果的频域指标</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>方法</th><th>基带变化 / dB</th><th>镜像/基带 / dB</th><th>镜像抑制 / dB</th><th>质心 / Hz</th></tr></thead>
+    <tbody>
+      <tr><td>零插值</td><td>0</td><td>0</td><td>—</td><td>167.3</td></tr>
+      <tr><td>FIR 低通（1025 阶）</td><td>−0.035</td><td>−30.84</td><td>30.88</td><td>166.6</td></tr>
+      <tr><td>线性内插</td><td>−2.47</td><td>−7.95</td><td>10.42</td><td>163.6</td></tr>
+    </tbody>
+  </table></div>
+  <figure><a href="figures/fig09_upsample_spectrum.png" target="_blank"><img loading="lazy" src="figures/fig09_upsample_spectrum.png" alt="升采样频谱对比"></a>
+  <figcaption>图 9　升采样前后的频谱对比（上：0–512 Hz；下：0–300 Hz 放大）</figcaption></figure>
+  <p>零插值后，频谱在 256–512 Hz 出现与 0–256 Hz 镜像对称的副本，镜像能量与基带几乎相等（0 dB）。FIR 低通把镜像压到 −30.84 dB（相对基带），镜像抑制 30.88 dB；线性内插只把镜像压到 −7.95 dB，抑制 10.42 dB。基带能量变化方面，FIR 仅 −0.035 dB，线性内插 −2.47 dB。</p>
+  <div class="note"><b>关键结论：</b>升采样可以消除零插值镜像、改善波形连续性，但不能恢复在 512 Hz 采样时已经混叠掉的高频信息。原始 44.1 kHz 信号中 256 Hz 以上的谐波，在 512 Hz 采样时已经全部混叠到 0–256 Hz；插值后的 1024 Hz 信号只包含 0–256 Hz 的“旧信息”，其频谱在 256–512 Hz 内没有真实内容。07 号音频会比 05 号少一些“毛刺”，但仍然是低沉的、被混叠破坏的和弦，不可能回到 01 号的音色。</div>
+</section>
+
+<section id="audio">
+  <h2><span class="num">07</span>听一听：8 段 5.000 s 音频</h2>
+  <p class="lead">以下音频均为 16 bit 单声道 WAV，时长 5.000 s，统一使用同一增益（峰值归一化到 0.850），未做逐文件响度归一化，便于公平比较。网页内播放的是 16 kHz 预览版，下载链接提供原始采样率 WAV。</p>
+  <div class="audio-grid">
+<article class="audio-card">
+  <div class="audio-head"><span class="track">01</span><div><h3>原始信号</h3><p class="fs">44 100 Hz</p></div></div>
+  <p class="audio-note">原始 CEG 和弦，峰值归一化到 0.850</p>
+  <audio controls preload="none" src="audio/preview/01_original_44100_preview16k.wav"></audio>
+  <a class="audio-dl" href="audio/01_original_44100.wav" download>下载原始 WAV（16 bit / 5.000 s）</a>
+</article>
+<article class="audio-card">
+  <div class="audio-head"><span class="track">02</span><div><h3>降到 22.05 kHz</h3><p class="fs">22 050 Hz</p></div></div>
+  <p class="audio-note">抗混叠重采样，与原始几乎听不出差别</p>
+  <audio controls preload="none" src="audio/preview/02_22050_resampled_preview16k.wav"></audio>
+  <a class="audio-dl" href="audio/02_22050_resampled.wav" download>下载原始 WAV（16 bit / 5.000 s）</a>
+</article>
+<article class="audio-card">
+  <div class="audio-head"><span class="track">03</span><div><h3>降到 8 kHz</h3><p class="fs">8 000 Hz</p></div></div>
+  <p class="audio-note">抗混叠重采样，4 kHz 以上谐波被去除，略暗</p>
+  <audio controls preload="none" src="audio/preview/03_8000_resampled_preview16k.wav"></audio>
+  <a class="audio-dl" href="audio/03_8000_resampled.wav" download>下载原始 WAV（16 bit / 5.000 s）</a>
+</article>
+<article class="audio-card">
+  <div class="audio-head"><span class="track">04</span><div><h3>直接抽取到 1 kHz</h3><p class="fs">1 000 Hz</p></div></div>
+  <p class="audio-note">基频仍在，高次谐波大量折回，音色金属化</p>
+  <audio controls preload="none" src="audio/preview/04_1000_naive_preview16k.wav"></audio>
+  <a class="audio-dl" href="audio/04_1000_naive.wav" download>下载原始 WAV（16 bit / 5.000 s）</a>
+</article>
+<article class="audio-card">
+  <div class="audio-head"><span class="track">05</span><div><h3>直接抽取到 512 Hz</h3><p class="fs">512 Hz</p></div></div>
+  <p class="audio-note">三个基频全部混叠，低频嗡鸣，和弦被破坏</p>
+  <audio controls preload="none" src="audio/preview/05_512_naive_preview16k.wav"></audio>
+  <a class="audio-dl" href="audio/05_512_naive.wav" download>下载原始 WAV（16 bit / 5.000 s）</a>
+</article>
+<article class="audio-card">
+  <div class="audio-head"><span class="track">06</span><div><h3>512 Hz 抗混叠</h3><p class="fs">512 Hz</p></div></div>
+  <p class="audio-note">干净但很弱、很闷，只剩过渡带泄漏</p>
+  <audio controls preload="none" src="audio/preview/06_512_antialias_preview16k.wav"></audio>
+  <a class="audio-dl" href="audio/06_512_antialias.wav" download>下载原始 WAV（16 bit / 5.000 s）</a>
+</article>
+<article class="audio-card">
+  <div class="audio-head"><span class="track">07</span><div><h3>512 → 1024 Hz（FIR）</h3><p class="fs">1 024 Hz</p></div></div>
+  <p class="audio-note">零插值 + 1025 阶 FIR，镜像被压制 30.9 dB</p>
+  <audio controls preload="none" src="audio/preview/07_512_to_1024_fir_preview16k.wav"></audio>
+  <a class="audio-dl" href="audio/07_512_to_1024_fir.wav" download>下载原始 WAV（16 bit / 5.000 s）</a>
+</article>
+<article class="audio-card">
+  <div class="audio-head"><span class="track">08</span><div><h3>512 → 1024 Hz（线性）</h3><p class="fs">1 024 Hz</p></div></div>
+  <p class="audio-note">线性内插，镜像残留明显，基带损失 2.47 dB</p>
+  <audio controls preload="none" src="audio/preview/08_512_to_1024_linear_preview16k.wav"></audio>
+  <a class="audio-dl" href="audio/08_512_to_1024_linear.wav" download>下载原始 WAV（16 bit / 5.000 s）</a>
+</article>
+  </div>
+  <div class="note"><b>建议顺序：</b>01 → 02 → 03 → 04 → 05 → 06 → 07 → 08。重点对比 01/04/05（采样率与混叠）和 05/07/08（两种插值）。</div>
+</section>
+
+<section id="conclusion">
+  <h2><span class="num">08</span>结论</h2>
+  <div class="card">
+    <p style="margin-top:0"><b>（1）信号。</b>CEG.wav 是 C4、E4、G4 组成的 C 大三和弦，基频实测 261.2、329.7、392.7 Hz，与十二平均律偏差不超过 3.2 音分；能量集中在 1.2 kHz 以下，5 kHz 以上为宽带噪声/混响底。</p>
+    <p><b>（2）合法降采样。</b>采样率从 44.1 kHz 降到 22.05 kHz、8 kHz 时，只要先做抗混叠，0–4 kHz 的基频与低次谐波基本不变；8 kHz 只是少了 4 kHz 以上谐波，音色略暗。</p>
+    <p><b>（3）非法抽取。</b>直接抽取到 1 kHz 时，三个基频仍在带内（误差 ±2.5 音分），但高次谐波大量折叠，音色金属化；直接抽取到 512 Hz 时，三个基频全部越过 Nyquist，折叠到 250.0、182.8、120.4 Hz，音高分别偏移 −78.8、−1020.6、−2043.3 音分，和弦结构被破坏。</p>
+    <p><b>（4）升采样。</b>对 512 Hz 信号做 2 倍插值，FIR 低通的镜像抑制为 30.9 dB，基带变化 −0.035 dB；线性内插镜像抑制仅 10.4 dB，基带损失 −2.47 dB。FIR 升采样后的音频为 07 号文件，线性内插对照为 08 号文件。</p>
+    <p style="margin-bottom:0"><b>（5）信息量。</b>升采样可以消除零插值镜像、改善波形连续性，但不能恢复采样时已经混叠掉的高频信息；要保留原和弦的音色，必须在 44.1 kHz 采样时就把 22.05 kHz 以下的全部内容记录下来，或在降采样前做抗混叠并接受带宽损失。</p>
+  </div>
+
+  <h3 style="font-family:var(--sans);color:var(--navy);margin:26px 0 10px;font-size:18px">提交文件</h3>
+  <div class="dl-grid">
+    <a class="dl" href="信号处理与系统分析实验报告_徐宏基.docx" download><b>DOCX 实验报告</b><span>按课程模板排版，16 页</span></a>
+    <a class="dl" href="audio/01_original_44100.wav" download><b>原始音频</b><span>44.1 kHz / 16 bit / 5 s</span></a>
+    <a class="dl" href="analyse_ceg.py" download><b>分析代码</b><span>一键重跑全部实验</span></a>
+    <a class="dl" href="analysis_summary.json" download><b>指标 JSON</b><span>所有数值的机器可读版本</span></a>
+    <a class="dl" href="CEG.wav" download><b>原始 CEG.wav</b><span>8.000 s 原始文件</span></a>
+  </div>
+</section>
+
+</main>
+
+<footer><div class="wrap">
+  <span>CEG 和弦的傅里叶变换与采样率分析 · 课程作业</span>
+  <span>Python 3.12 / numpy / scipy / matplotlib · WPS 排版校验</span>
+</div></footer>
+<a class="top" href="#" aria-label="回到顶部">↑</a>
+</body>
+</html>
